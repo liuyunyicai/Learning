@@ -6,11 +6,12 @@ import android.content.Intent;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
-import android.support.annotation.IntDef;
 import android.util.Log;
 import android.view.View;
 
 import java.lang.ref.WeakReference;
+
+import rx.functions.Action1;
 
 public class MyTestService2 extends Service {
     private static final String TAG = MyTestService2.class.getSimpleName();
@@ -80,11 +81,15 @@ public class MyTestService2 extends Service {
     private void handleMessage(Message msg) {
         switch (msg.what) {
             case UPDATE_MSG:
-                if (FullScreenUtil.isFullScreen(this, view)) {
-                    Log.w(FullScreenUtil.TAG, "isFullScreen");
-                } else {
-                    Log.i(FullScreenUtil.TAG, "Not FullScreen");
-                }
+//                ProcessStateUtil.getForegroundProcess();
+//                ProcessStateUtil.getLauncherPackageName(this);
+
+                FullScreenUtil.isFullScreen(this).subscribe(new Action1<Integer>() {
+                    @Override
+                    public void call(Integer integer) {
+                        Log.i(FullScreenUtil.TEST_TAG, "isFullScreen == " + integer);
+                    }
+                });
 
 
                 break;

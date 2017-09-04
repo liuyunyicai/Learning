@@ -1,23 +1,15 @@
 package com.example.nealkyliu.test;
 
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.graphics.Matrix;
-import android.graphics.PixelFormat;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.NotificationCompatBase;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.app.NotificationCompat;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.text.format.Formatter;
 import android.util.Log;
-import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -27,7 +19,19 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import java.util.logging.Logger;
+import com.example.nealkyliu.test.utils.LogUtil;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import rx.Observable;
+import rx.Subscriber;
+import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -45,6 +49,9 @@ public class MainActivity extends AppCompatActivity {
     private View view;
     private Window window;
 
+    private RecyclerView mRecyclerView;
+    private ViewAdapter  mViewAdapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,31 +60,88 @@ public class MainActivity extends AppCompatActivity {
         screen_width = UIUtils.getScreenWidth(this);
         screen_height = UIUtils.getScreenHeight(this);
 
-        mImgView = (ImageView) findViewById(R.id.mImgView);
-        changeImageView();
-        window = getWindow();
-        view = window.getDecorView();
+        mRecyclerView = $(R.id.mRecyclerView);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        List<String> datas = new ArrayList<>();
 
-        Intent intent = getIntent();
-        intent.putExtra("HAHA", 10L);
-        Log.w("MY_TEST", "test class " + intent.getExtras().get("HAHA").getClass());
+        for (int i = 0; i < 10; i++) {
+            datas.add("1");
+        }
 
-        mImgView.setOnClickListener(new View.OnClickListener() {
+        mViewAdapter = new ViewAdapter(this, datas);
+        mRecyclerView.setAdapter(mViewAdapter);
+
+//        test();
+        test1();
+    }
+
+    private void test1() {
+//        startService(new Intent(this, MyTestService2.class));
+    }
+
+    long count = 0;
+    Observable<Long> observable;
+    Subscription mSubscription;
+    private void test() {
+//        FullScreenUtil.isFullScreen(this, new View(this));
+//        startService(new Intent(this, MyTestService2.class));
+//        isProcessInfoHidden();
+
+        Observable<Integer> observable1 = Observable.create(new Observable.OnSubscribe<Integer>() {
             @Override
-            public void onClick(View v) {
+            public void call(Subscriber<? super Integer> subscriber) {
+                subscriber.onNext(1);
+                subscriber.onCompleted();
+            }
+        }).subscribeOn(Schedulers.io());
 
-                NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-                NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this);
-                Notification notification = builder
-                        .setContentTitle("这是通知标题")
-                        .setContentText("这是通知内容")
-                        .setWhen(System.currentTimeMillis())
-                        .setSmallIcon(R.mipmap.status_icon)
-                        .setColor(Color.parseColor("#FFFFD900"))
-                        .build();
-                manager.notify(1, notification);
+        Observable<Integer> observable2 = Observable.create(new Observable.OnSubscribe<Integer>() {
+            @Override
+            public void call(final Subscriber<? super Integer> subscriber) {
+                try {
+//                    mRecyclerView.postDelayed(new Runnable() {
+//                        @Override
+//                        public void run() {
+//
+//                        }
+//                    }, 3000);
+                    String str = null;
+                    str.length();
+                    subscriber.onNext(2);
+                    subscriber.onCompleted();
+                } catch (Exception e) {
+                    subscriber.onError(e);
+                }
+            }
+        }).subscribeOn(AndroidSchedulers.mainThread());
+
+        Observable<Integer> observable3 = Observable.create(new Observable.OnSubscribe<Integer>() {
+            @Override
+            public void call(Subscriber<? super Integer> subscriber) {
+                subscriber.onNext(3);
+                subscriber.onCompleted();
+            }
+        }).subscribeOn(Schedulers.io());
 
 
+
+        Observable<Integer> observable = Observable.concat(observable1, observable2, observable3);
+//        Observable<Integer> observable = Observable.just(null);
+
+        observable.subscribe(new Subscriber<Integer>() {
+            @Override
+            public void onCompleted() {
+                LogUtil.i("onComplete");
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                LogUtil.e("onError == " + e);
+            }
+
+            @Override
+            public void onNext(Integer integer) {
+                LogUtil.i("on Next == " + integer + "; Thread == " + Thread.currentThread());
             }
         });
 
@@ -85,62 +149,83 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-//        View view = new View(this);
-//        View two = ((ViewGroup)view).getChildAt(0);
-//
-//        mRelatedNews = (LinearLayout) findViewById(R.id.mRelatedNews);
-//        mRelatedNews.setOrientation(LinearLayout.VERTICAL);
-//
-//        LayoutInflater inflater = LayoutInflater.from(this);
-
-
-
-//        for (int i = 0; i < 10; i++) {
-//            View childLayout = mRelatedNews.getChildAt(i / 2);
-//            if (null == childLayout) {
-//                childLayout = new LinearLayout(this);
-//                mRelatedNews.addView(childLayout, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-//
-//            }
-//
-//            if (childLayout instanceof LinearLayout) {
-//                ((LinearLayout)childLayout).setOrientation(LinearLayout.HORIZONTAL);
-//
-//                View mView = inflater.inflate(R.layout.test_text, null, false);
-//                mView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, 1));
-//                ((LinearLayout)childLayout).addView(mView);
-//            }
-//
-//        }
-
-//        Log.i(TAG, "Screen height == " + UIUtils.getScreenHeight(this));
-//        Log.i(TAG, "Screen width == " + UIUtils.getScreenWidth(this));
-//        Log.w(TAG, "Screen DisplayMetrics == " + this.getResources().getDisplayMetrics());
-//        Log.w(TAG, "scale == " + UIUtils.getScreenScale(this));
-//
-//        setFullScreen();
-
-//        Log.i(TAG, "scale == " + getResources().getDisplayMetrics().density);
-
-////
-//        mTestTxt = (TextView) findViewById(R.id.test_txt);
-//        mTestTxt.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                if (isFullScreen) {
-//                    setNotFullScreen();
-//
-//                } else {
-//                    setFullScreen();
-////                    setLandScapeAndFullScreen();
-//                }
-////                logLocation();
-//            }
-//        });
-//
-//        startService(new Intent(this, MyTestService2.class));
-
     }
+
+    @Override
+    protected void onDestroy() {
+        if (null != observable) {
+            mSubscription.unsubscribe();
+        }
+        super.onDestroy();
+    }
+
+    static abstract class A implements Comparable<A>{
+
+        @Override
+        public int compareTo(@NonNull A o) {
+            return 0;
+        }
+    }
+
+    static class B extends A {}
+    static class C extends A {}
+    static class D extends A {}
+
+
+    public static boolean isProcessInfoHidden() {
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new FileReader("/proc/"));
+            for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+                String[] columns = line.split("\\s+");
+                if (columns.length == 6 && columns[1].equals("/proc")) {
+                    return columns[3].contains("hidepid=1") || columns[3].contains("hidepid=2");
+                }
+            }
+        } catch (IOException e) {
+            Log.d(TAG, "Error reading /proc/mounts. Checking if UID 'readproc' exists.");
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException ignored) {
+                }
+            }
+        }
+        return android.os.Process.getUidForName("readproc") == 3009;
+    }
+
+    private void readSys() {
+        String str1 = "/proc/meminfo";// 系统内存信息文件
+        String str2;
+        String[] arrayOfString;
+        long initial_memory = 0;
+        try {
+            FileReader localFileReader = new FileReader(str1);
+            BufferedReader localBufferedReader = new BufferedReader(localFileReader, 8192);
+            str2 = localBufferedReader.readLine();// 读取meminfo第一行，系统总内存大小
+            arrayOfString = str2.split("//s+");
+            for (String num : arrayOfString) {
+                Log.i(str2, num + "/t");
+            }
+
+            initial_memory = Integer.valueOf(arrayOfString[1]).intValue() * 1024;// 获得系统总内存，单位是KB，乘以1024转换为Byte
+
+            localBufferedReader.close();
+        } catch (IOException e) {
+
+        }
+
+        Log.i("MY_TEST", "size == " + Formatter.formatFileSize(getBaseContext(), initial_memory));
+        return;// Byte转换为KB或者MB，内存大小
+    }
+
+
+    private <T> T $(int resId) {
+        return (T) findViewById(resId);
+    }
+
+
 
     private void changeImageView() {
         mScale = 0.5 == mScale ? 0.8f : 0.5f;
@@ -182,6 +267,8 @@ public class MainActivity extends AppCompatActivity {
 //        startService(new Intent(this, FullScreenListenerService.class));
 //        logLocation();
     }
+
+
 
 
 }
