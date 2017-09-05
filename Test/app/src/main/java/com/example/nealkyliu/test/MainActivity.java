@@ -1,7 +1,15 @@
 package com.example.nealkyliu.test;
 
+import android.annotation.TargetApi;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Matrix;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -19,6 +27,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.example.nealkyliu.test.test.JobSchedulerService;
 import com.example.nealkyliu.test.utils.LogUtil;
 
 import java.io.BufferedReader;
@@ -26,6 +35,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
 import rx.Subscriber;
@@ -52,6 +62,10 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView mRecyclerView;
     private ViewAdapter  mViewAdapter;
 
+    public static final int JOB_ID_LOCAL_PULL_TASK = 6;   // 执行Local Pull
+    JobScheduler mJobScheduler;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,77 +87,104 @@ public class MainActivity extends AppCompatActivity {
 
 //        test();
         test1();
+
+//        testJobSchedule();
+    }
+
+    private void testJobSchedule() {
+        mJobScheduler = (JobScheduler) getSystemService(Context.JOB_SCHEDULER_SERVICE);
+        scheduleLocalPullTask(5);
+    }
+
+    @TargetApi(21)
+    public void scheduleLocalPullTask(long period) {
+        ComponentName component = new ComponentName(this, JobSchedulerService.class);
+        JobInfo.Builder job = new JobInfo.Builder(JOB_ID_LOCAL_PULL_TASK, component)
+                .setMinimumLatency(TimeUnit.SECONDS.toMillis(5))
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY);
+        if (mJobScheduler.schedule(job.build()) <= 0) {
+            LogUtil.d("start Local Pull Task job failed");
+        } else {
+            LogUtil.d("start Local Pull Task job success");
+        }
     }
 
     private void test1() {
-//        startService(new Intent(this, MyTestService2.class));
-    }
+        Context context = getApplicationContext();
+        context.startService(new Intent(context, KeepAliveService.class));
 
-    long count = 0;
-    Observable<Long> observable;
-    Subscription mSubscription;
-    private void test() {
-//        FullScreenUtil.isFullScreen(this, new View(this));
-//        startService(new Intent(this, MyTestService2.class));
-//        isProcessInfoHidden();
+//        Intent startIntent = new Intent(this, KeepAliveService.class);
+//        AlarmManager mgr = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
+//        PendingIntent restartIntent = PendingIntent.getService(this.getApplicationContext(), 0, startIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+//        mgr.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), TimeUnit.SECONDS.toMillis(30), restartIntent);
+//        mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 3000, restartIntent);
 
-        Observable<Integer> observable1 = Observable.create(new Observable.OnSubscribe<Integer>() {
-            @Override
-            public void call(Subscriber<? super Integer> subscriber) {
-                subscriber.onNext(1);
-                subscriber.onCompleted();
-            }
-        }).subscribeOn(Schedulers.io());
 
-        Observable<Integer> observable2 = Observable.create(new Observable.OnSubscribe<Integer>() {
-            @Override
-            public void call(final Subscriber<? super Integer> subscriber) {
-                try {
-//                    mRecyclerView.postDelayed(new Runnable() {
-//                        @Override
-//                        public void run() {
+//    long count = 0;
+//    Observable<Long> observable;
+//    Subscription mSubscription;
+//    private void test() {
+////        FullScreenUtil.isFullScreen(this, new View(this));
+////        startService(new Intent(this, MyTestService2.class));
+////        isProcessInfoHidden();
 //
-//                        }
-//                    }, 3000);
-                    String str = null;
-                    str.length();
-                    subscriber.onNext(2);
-                    subscriber.onCompleted();
-                } catch (Exception e) {
-                    subscriber.onError(e);
-                }
-            }
-        }).subscribeOn(AndroidSchedulers.mainThread());
-
-        Observable<Integer> observable3 = Observable.create(new Observable.OnSubscribe<Integer>() {
-            @Override
-            public void call(Subscriber<? super Integer> subscriber) {
-                subscriber.onNext(3);
-                subscriber.onCompleted();
-            }
-        }).subscribeOn(Schedulers.io());
-
-
-
-        Observable<Integer> observable = Observable.concat(observable1, observable2, observable3);
-//        Observable<Integer> observable = Observable.just(null);
-
-        observable.subscribe(new Subscriber<Integer>() {
-            @Override
-            public void onCompleted() {
-                LogUtil.i("onComplete");
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                LogUtil.e("onError == " + e);
-            }
-
-            @Override
-            public void onNext(Integer integer) {
-                LogUtil.i("on Next == " + integer + "; Thread == " + Thread.currentThread());
-            }
-        });
+//        Observable<Integer> observable1 = Observable.create(new Observable.OnSubscribe<Integer>() {
+//            @Override
+//            public void call(Subscriber<? super Integer> subscriber) {
+//                subscriber.onNext(1);
+//                subscriber.onCompleted();
+//            }
+//        }).subscribeOn(Schedulers.io());
+//
+//        Observable<Integer> observable2 = Observable.create(new Observable.OnSubscribe<Integer>() {
+//            @Override
+//            public void call(final Subscriber<? super Integer> subscriber) {
+//                try {
+////                    mRecyclerView.postDelayed(new Runnable() {
+////                        @Override
+////                        public void run() {
+////
+////                        }
+////                    }, 3000);
+//                    String str = null;
+//                    str.length();
+//                    subscriber.onNext(2);
+//                    subscriber.onCompleted();
+//                } catch (Exception e) {
+//                    subscriber.onError(e);
+//                }
+//            }
+//        }).subscribeOn(AndroidSchedulers.mainThread());
+//
+//        Observable<Integer> observable3 = Observable.create(new Observable.OnSubscribe<Integer>() {
+//            @Override
+//            public void call(Subscriber<? super Integer> subscriber) {
+//                subscriber.onNext(3);
+//                subscriber.onCompleted();
+//            }
+//        }).subscribeOn(Schedulers.io());
+//
+//
+//
+//        Observable<Integer> observable = Observable.concat(observable1, observable2, observable3);
+////        Observable<Integer> observable = Observable.just(null);
+//
+//        observable.subscribe(new Subscriber<Integer>() {
+//            @Override
+//            public void onCompleted() {
+//                LogUtil.i("onComplete");
+//            }
+//
+//            @Override
+//            public void onError(Throwable e) {
+//                LogUtil.e("onError == " + e);
+//            }
+//
+//            @Override
+//            public void onNext(Integer integer) {
+//                LogUtil.i("on Next == " + integer + "; Thread == " + Thread.currentThread());
+//            }
+//        });
 
 
 
@@ -153,9 +194,9 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        if (null != observable) {
-            mSubscription.unsubscribe();
-        }
+//        if (null != observable) {
+//            mSubscription.unsubscribe();
+//        }
         super.onDestroy();
     }
 

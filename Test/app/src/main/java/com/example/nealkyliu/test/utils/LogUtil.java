@@ -7,7 +7,7 @@ import android.util.Log;
  */
 
 public class LogUtil {
-    private static final String TAG = "LOG_TEST";
+    private static final String TAG = "MY_TEST";
 
     public static void d(String er) {
         Log.d(TAG, er);

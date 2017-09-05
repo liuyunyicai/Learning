@@ -3,6 +3,7 @@
     package="com.example.nealkyliu.test">
 
     <uses-permission android:name="android.permission.CHANGE_CONFIGURATION"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:allowBackup="true"
@@ -11,7 +12,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+        <activity android:name=".MainActivity"
+            android:permission="android.permission.RECEIVE_BOOT_COMPLETED"
+            >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -30,7 +33,16 @@
         <service
             android:name=".MyTestService2"
             android:enabled="true"
-            android:exported="true"></service>
+            android:exported="false"></service>
+
+        <service android:name=".test.JobSchedulerService"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE"/>
+
+        <service android:name=".KeepAliveService"
+                 android:enabled="true"
+                 android:exported="false">
+        </service>
     </application>
 
 </manifest>
