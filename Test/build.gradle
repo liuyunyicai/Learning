@@ -19,6 +19,13 @@ buildscript {
 allprojects {
     repositories {
         jcenter()
+
+        maven {
+            url "http://git.bytedance.com:8081/nexus/content/repositories/ss_app_android/"
+        }
+        maven {
+            url "http://git.bytedance.com:8081/nexus/content/repositories/ss_app_android_snapshots/"
+        }
     }
 }
 

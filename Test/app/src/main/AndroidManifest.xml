@@ -4,6 +4,11 @@
 
     <uses-permission android:name="android.permission.CHANGE_CONFIGURATION"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS"/>
+
+    <uses-permission android:name="android.permission.READ_SYNC_SETTINGS"/>
+    <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS"/>
+    <uses-permission android:name="com.iqoo.secure.secureprovider.write"/>
 
     <application
         android:allowBackup="true"
@@ -21,6 +26,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity android:name=".account.AuthActivity"></activity>
 
         <service
             android:name=".FullScreenListenerService"
@@ -42,6 +49,44 @@
         <service android:name=".KeepAliveService"
                  android:enabled="true"
                  android:exported="false">
+        </service>
+
+        <receiver android:name=".ScreenStateReceiver"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="android.intent.action.USER_PRESENT" />
+            </intent-filter>
+        </receiver>
+        
+        <provider
+            android:authorities="com.ss.android.application.provider"
+            android:name=".account.TestAccountProvider"
+            android:exported="false"
+            android:syncable="true"
+            ></provider>
+
+        <service android:name=".account.AccountSyncService"
+            android:exported="true" android:process=":background">
+            <intent-filter>
+                <action
+                    android:name="android.content.SyncAdapter"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/account_adapter"/>
+        </service>
+
+        <service android:name=".account.AccountAuthService"
+            android:exported="true"
+            android:process=":background"
+            >
+            <intent-filter>
+                <action
+                    android:name="android.accounts.AccountAuthenticator"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.accounts.AccountAuthenticator"
+                android:resource="@xml/authenticator"/>
         </service>
     </application>
 

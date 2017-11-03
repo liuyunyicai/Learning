@@ -6,16 +6,20 @@ import android.app.PendingIntent;
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
 import android.content.ComponentName;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Matrix;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.Html;
+import android.text.SpannableString;
 import android.text.format.Formatter;
 import android.util.Log;
 import android.view.View;
@@ -33,15 +37,8 @@ import com.example.nealkyliu.test.utils.LogUtil;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
-
-import rx.Observable;
-import rx.Subscriber;
-import rx.Subscription;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -65,6 +62,8 @@ public class MainActivity extends AppCompatActivity {
     public static final int JOB_ID_LOCAL_PULL_TASK = 6;   // 执行Local Pull
     JobScheduler mJobScheduler;
 
+    private TextView mTextView1;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,21 +73,115 @@ public class MainActivity extends AppCompatActivity {
         screen_width = UIUtils.getScreenWidth(this);
         screen_height = UIUtils.getScreenHeight(this);
 
-        mRecyclerView = $(R.id.mRecyclerView);
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        List<String> datas = new ArrayList<>();
+//        mTextView1 = $(R.id.mTextView1);
+//        String a = "<b>hello</b>haha";
+//        String b = "dfsfsdfsfsdf";
+//        SpannableString a1 = new SpannableString("<b>hello</b>haha");
+//
+//        mTextView1.setText(Html.fromHtml(b));
 
-        for (int i = 0; i < 10; i++) {
-            datas.add("1");
-        }
+//        mRecyclerView = $(R.id.mRecyclerView);
+//        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+//        List<String> datas = new ArrayList<>();
+//
+//        for (int i = 0; i < 10; i++) {
+//            datas.add("1");
+//        }
 
-        mViewAdapter = new ViewAdapter(this, datas);
-        mRecyclerView.setAdapter(mViewAdapter);
+
+
+//        mViewAdapter = new ViewAdapter(this, datas);
+//        mRecyclerView.setAdapter(mViewAdapter);
+
 
 //        test();
-        test1();
+//        test1();
 
 //        testJobSchedule();
+
+//        for (int i = 0; i < 1000; i++) {
+//            test1();
+//        }
+
+//        queryStartUpListInVivo();
+
+        listAlarms();
+
+
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void listAlarms() {
+        HashSet<Long> alarms = new HashSet<>();
+        AlarmManager mAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        for (AlarmManager.AlarmClockInfo aci = mAlarmManager.getNextAlarmClock(); aci != null; aci = mAlarmManager.getNextAlarmClock()) {
+//            Log.d(TAG, aci.getShowIntent().toString());
+//            Log.d(TAG, String.format("Trigger time: %d", aci.getTriggerTime()));
+            alarms.add(aci.getTriggerTime());
+        }
+        Log.d(TAG, alarms.toString());
+    }
+
+    /**
+     * query startup List
+     **/
+    public static final Uri CONTENT_URI = Uri.parse("content://com.iqoo.secure.provider.secureprovider/allbgstartappslist");
+    private void queryStartUpListInVivo() {
+        ContentValues contentValues = new ContentValues();
+
+        contentValues.put("_id", "_id");
+        contentValues.put("pkgname", "pkgname");
+        contentValues.put("pkguid", "pkguid");
+        contentValues.put("setbyuser", "setbyuser");
+        contentValues.put("currentstate", "currentstate");
+
+        Cursor cursor = getContentResolver().query(CONTENT_URI, null, null, null, null);
+
+        try {
+            Log.e("ContentProviderTest", "total data number = " + cursor.getCount());
+            cursor.moveToFirst();
+            Log.e("ContentProviderTest", "total data number = " + cursor.getString(1));
+            cursor.close();
+        } catch (Exception e) {
+        } finally {
+        }
+    }
+
+
+
+    int count;
+    private void test2() {
+        final M m = new M();
+
+        for (int i = 0; i < 10; i++) {
+            count = i;
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    m.setValue(count);
+                }
+            }).start();
+        }
+    }
+
+    static class M {
+        private static int hh = 1;
+        public int a;
+
+       public void setValue(int value) {
+
+           synchronized (this) {
+               for (int m = 0; m < 1000; m++) {
+                   LogUtil.i("Pre value " + a + "; Thread " + Thread.currentThread());
+                   a = value;
+                   LogUtil.i("After value " + a + "; Thread " + Thread.currentThread());
+               }
+           }
+       }
+
+       private static void setA() {
+
+       }
     }
 
     private void testJobSchedule() {
@@ -100,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
     public void scheduleLocalPullTask(long period) {
         ComponentName component = new ComponentName(this, JobSchedulerService.class);
         JobInfo.Builder job = new JobInfo.Builder(JOB_ID_LOCAL_PULL_TASK, component)
-                .setMinimumLatency(TimeUnit.SECONDS.toMillis(5))
+                .setMinimumLatency(TimeUnit.SECONDS.toMillis(0))
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY);
         if (mJobScheduler.schedule(job.build()) <= 0) {
             LogUtil.d("start Local Pull Task job failed");
@@ -110,14 +203,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void test1() {
-        Context context = getApplicationContext();
-        context.startService(new Intent(context, KeepAliveService.class));
-
-//        Intent startIntent = new Intent(this, KeepAliveService.class);
-//        AlarmManager mgr = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-//        PendingIntent restartIntent = PendingIntent.getService(this.getApplicationContext(), 0, startIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-//        mgr.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), TimeUnit.SECONDS.toMillis(30), restartIntent);
-//        mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 3000, restartIntent);
+        Intent startIntent = new Intent(this, KeepAliveService.class);
+        AlarmManager mgr = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
+        PendingIntent restartIntent = PendingIntent.getService(this.getApplicationContext(), 0, startIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        mgr.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), TimeUnit.SECONDS.toMillis(30), restartIntent);
 
 
 //    long count = 0;
